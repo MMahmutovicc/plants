@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Spirala</string>
+    <string-array name="modSpinner">
+        <item>Medicinski</item>
+        <item>Kuharski</item>
+        <item>Botanički</item>
+    </string-array>
+    <string name="reset">Reset</string>
+</resources>
