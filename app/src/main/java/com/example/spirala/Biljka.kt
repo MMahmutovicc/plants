@@ -1,5 +1,9 @@
 package com.example.spirala
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
+
+@Parcelize
 data class Biljka(
     val naziv: String,
     val porodica: String,
@@ -9,4 +13,4 @@ data class Biljka(
     val jela: List<String>,
     val klimatskiTipovi: List<KlimatskiTip>,
     val zemljisniTipovi: List<Zemljiste>
-)
+) : Parcelable

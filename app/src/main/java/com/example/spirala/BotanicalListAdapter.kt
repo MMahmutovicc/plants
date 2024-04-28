@@ -9,7 +9,8 @@ import android.widget.ImageView
 import android.widget.TextView
 
 class BotanicalListAdapter(
-    private var plants:List<Biljka>
+    private var plants:MutableList<Biljka>,
+    private var allPlants: MutableList<Biljka>
 ) : RecyclerView.Adapter<BotanicalListAdapter.BotanicalViewHolder>() {
     override fun getItemCount(): Int = plants.size
     override fun onCreateViewHolder(
@@ -29,13 +30,18 @@ class BotanicalListAdapter(
         holder.zemljisniTipItem.text = plants[position].zemljisniTipovi[0].naziv;
     }
 
-    fun updatePlants(plants: List<Biljka>) {
+    fun updatePlants(plants: MutableList<Biljka>) {
         this.plants = plants
         notifyDataSetChanged()
     }
-    fun getPlants(): List<Biljka> {
+    fun getPlants(): MutableList<Biljka> {
         return plants
     }
+
+    fun setAllPlants(plants: MutableList<Biljka>) {
+        this.allPlants = plants
+    }
+
     inner class BotanicalViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val nazivItem: TextView = itemView.findViewById(R.id.nazivItem)
         val porodicaItem: TextView = itemView.findViewById(R.id.porodicaItem)
@@ -44,10 +50,8 @@ class BotanicalListAdapter(
         init {
             itemView.setOnClickListener {
                     v ->
-                println(adapterPosition)
-                var biljke = getPLants()
                 var newPlants = mutableListOf<Biljka>()
-                for (biljka in biljke) {
+                for (biljka in allPlants) {
                     if (plants[adapterPosition].porodica == biljka.porodica) {
                         if (biljka.klimatskiTipovi.any {it in plants[adapterPosition].klimatskiTipovi} &&
                             biljka.zemljisniTipovi.any {it in plants[adapterPosition].zemljisniTipovi})

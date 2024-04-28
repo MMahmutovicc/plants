@@ -9,7 +9,8 @@ import android.widget.ImageView
 import android.widget.TextView
 
 class MedicalListAdapter(
-    private var plants:List<Biljka>
+    private var plants:MutableList<Biljka>,
+    private var allPlants:MutableList<Biljka>
 ) : RecyclerView.Adapter<MedicalListAdapter.MedicalViewHolder>() {
     override fun getItemCount(): Int = plants.size
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MedicalViewHolder {
@@ -34,12 +35,15 @@ class MedicalListAdapter(
             holder.korist3item.text = "";
         }
     }
-    fun updatePlants(plants: List<Biljka>) {
+    fun updatePlants(plants: MutableList<Biljka>) {
         this.plants = plants
         notifyDataSetChanged()
     }
-    fun getPlants(): List<Biljka> {
+    fun getPlants(): MutableList<Biljka> {
         return plants
+    }
+    fun setAllPlants(plants: MutableList<Biljka>) {
+        this.allPlants = plants
     }
 
     inner class MedicalViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -51,9 +55,8 @@ class MedicalListAdapter(
         init {
             itemView.setOnClickListener {
                 v ->
-                var biljke = getPLants()
                 var newPlants = mutableListOf<Biljka>()
-                for (biljka in biljke) {
+                for (biljka in allPlants) {
                         if(biljka.medicinskeKoristi.any {it in plants[adapterPosition].medicinskeKoristi}) {
                             newPlants.add(biljka)
                         }

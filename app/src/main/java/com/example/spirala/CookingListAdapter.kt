@@ -9,7 +9,8 @@ import android.widget.ImageView
 import android.widget.TextView
 
 class CookingListAdapter(
-    private var plants:List<Biljka>
+    private var plants:MutableList<Biljka>,
+    private var allPlants:MutableList<Biljka>
 ) : RecyclerView.Adapter<CookingListAdapter.CookingViewHolder>() {
     override fun getItemCount(): Int = plants.size
     override fun onCreateViewHolder(
@@ -40,13 +41,18 @@ class CookingListAdapter(
         }
     }
 
-    fun updatePlants(plants: List<Biljka>) {
+    fun updatePlants(plants: MutableList<Biljka>) {
         this.plants = plants
         notifyDataSetChanged()
     }
-    fun getPlants(): List<Biljka> {
+    fun getPlants(): MutableList<Biljka> {
         return plants
     }
+
+    fun setAllPlants(plants: MutableList<Biljka>) {
+        this.allPlants = plants
+    }
+
     inner class CookingViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val nazivItem: TextView = itemView.findViewById(R.id.nazivItem)
         val profilOkusaItem: TextView = itemView.findViewById(R.id.profilOkusaItem)
@@ -56,9 +62,8 @@ class CookingListAdapter(
         init {
             itemView.setOnClickListener {
                 v ->
-                var biljke = getPLants()
                 var newPlants = mutableListOf<Biljka>()
-                for (biljka in biljke) {
+                for (biljka in allPlants) {
                     if (plants[adapterPosition].profilOkusa == biljka.profilOkusa)
                         newPlants.add(biljka)
                     else if (biljka.jela.any {it in plants[adapterPosition].jela}) {

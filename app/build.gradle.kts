@@ -1,12 +1,12 @@
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
+    id("kotlin-parcelize")
 }
 
 android {
     namespace = "com.example.spirala"
     compileSdk = 34
-
     defaultConfig {
         applicationId = "com.example.spirala"
         minSdk = 30

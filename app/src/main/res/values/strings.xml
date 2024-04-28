@@ -6,4 +6,11 @@
         <item>Botanički</item>
     </string-array>
     <string name="reset">Reset</string>
+    <string name="add_meal">Dodaj jelo</string>
+    <string name="add_plant">Dodaj biljku</string>
+    <string name="take_a_photo">Uslikaj biljku</string>
+    <string name="plant_name">Naziv biljke</string>
+    <string name="plant_family">Porodica biljke</string>
+    <string name="medical_warning">Medicinsko upozorenje</string>
+    <string name="meal">Jelo</string>
 </resources>

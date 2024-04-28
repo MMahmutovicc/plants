@@ -1,7 +1,7 @@
 package com.example.spirala
 
-fun getPLants(): List<Biljka> {
-    return listOf(
+fun getPLants(): MutableList<Biljka> {
+    return mutableListOf(
         Biljka(
             naziv = "Bosiljak (Ocimum basilicum)",
             porodica = "Lamiaceae (usnate)",
