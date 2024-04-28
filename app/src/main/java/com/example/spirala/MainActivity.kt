@@ -127,12 +127,8 @@ class MainActivity : AppCompatActivity() {
         medicalListAdapter.setAllPlants(allPlants)
 
         botanicalListAdapter = BotanicalListAdapter(mutableListOf(),mutableListOf())
-        //botanicalListAdapter.updatePlants(plantsList)
-        //medicalListAdapter.setAllPlants(allPlants)
 
         cookingListAdapter = CookingListAdapter(mutableListOf(),mutableListOf())
-        //cookingListAdapter.updatePlants(plantsList)
-        //medicalListAdapter.setAllPlants(allPlants)
 
     }
 }

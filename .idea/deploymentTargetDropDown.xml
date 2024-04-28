@@ -2,10 +2,22 @@
 <project version="4">
   <component name="deploymentTargetDropDown">
     <value>
-      <entry key="TestS1">
+      <entry key="app">
         <State />
       </entry>
-      <entry key="app">
+      <entry key="dvaIstaJela()">
+        <State />
+      </entry>
+      <entry key="dvaIstaJelaNakonIzmjene()">
+        <State />
+      </entry>
+      <entry key="maloKarakteraNakonIzmjene()">
+        <State />
+      </entry>
+      <entry key="premaloKaraktera()">
+        <State />
+      </entry>
+      <entry key="previseKaraktera()">
         <State />
       </entry>
     </value>

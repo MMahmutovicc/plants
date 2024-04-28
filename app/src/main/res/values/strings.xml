@@ -13,4 +13,9 @@
     <string name="plant_family">Porodica biljke</string>
     <string name="medical_warning">Medicinsko upozorenje</string>
     <string name="meal">Jelo</string>
+    <string name="medical_usage">Medicinska korist</string>
+    <string name="climate_type">Klimatski tip</string>
+    <string name="soil_type">Zemljisni tip</string>
+    <string name="taste">Profil okusa</string>
+    <string name="meals">Jela</string>
 </resources>

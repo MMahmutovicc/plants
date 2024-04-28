@@ -1,30 +1,36 @@
 package com.example.spirala
 
-import android.R
+
+import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.ContentValues
 import android.content.Intent
-import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
-import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.ListView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContentProviderCompat.requireContext
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 
 
 class NovaBiljkaActivity : AppCompatActivity() {
     private var medicinskeKoristi : MutableList<MedicinskaKorist> = mutableListOf()
     private var klimatskiTipovi : MutableList<KlimatskiTip> = mutableListOf()
     private var zemljisniTipovi : MutableList<Zemljiste> = mutableListOf()
-    private var profiliOkusa : MutableList<ProfilOkusaBiljke> = mutableListOf()
+    private var profilOkusa : ProfilOkusaBiljke? = null
     private var jela : MutableList<String> = mutableListOf()
     private var izmijeni = -1
+    private var camUri: Uri? = null
 
     private lateinit var nazivET : EditText
     private lateinit var porodicaET : EditText
@@ -38,7 +44,23 @@ class NovaBiljkaActivity : AppCompatActivity() {
     private lateinit var dodajJeloBtn: Button
     private lateinit var dodajBiljkuBtn: Button
     private lateinit var uslikajBiljkuBtn: Button
+    private lateinit var slikaIV: ImageView
+    private lateinit var medicinskaKoristTV : TextView
+    private lateinit var klimatskiTipTV : TextView
+    private lateinit var zemljisniTipTV : TextView
+    private lateinit var profilOkusaTV : TextView
+    private lateinit var jelaTV : TextView
 
+    val camera = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            slikaIV.setImageURI(camUri)
+        }
+        else {
+            val toast = Toast.makeText(this, "text", Toast.LENGTH_SHORT) // in Activity
+            toast.show()
+        }
+    }
+    @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         //enableEdgeToEdge()
@@ -48,6 +70,8 @@ class NovaBiljkaActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }*/
+
+        slikaIV = findViewById(R.id.slikaIV)
         nazivET = findViewById(R.id.nazivET)
         porodicaET = findViewById(R.id.porodicaET)
         medicinskoUpozorenjeET = findViewById(R.id.medicinskoUpozorenjeET)
@@ -60,10 +84,16 @@ class NovaBiljkaActivity : AppCompatActivity() {
         dodajJeloBtn = findViewById(R.id.dodajJeloBtn)
         dodajBiljkuBtn = findViewById(R.id.dodajBiljkuBtn)
         uslikajBiljkuBtn = findViewById(R.id.uslikajBiljkuBtn)
+        medicinskaKoristTV = findViewById(R.id.mkTV)
+        klimatskiTipTV = findViewById(R.id.ktTV)
+        zemljisniTipTV = findViewById(R.id.ztTV)
+        profilOkusaTV = findViewById(R.id.poTV)
+        jelaTV = findViewById(R.id.jTV)
+
         //MEDICINSKA KORIST
         val medicinskaKoristAdapter: ArrayAdapter<*>
-        medicinskaKoristAdapter = ArrayAdapter(this, R.layout.simple_list_item_1,MedicinskaKorist.entries.map { it.opis })
-        //medicinskaKoristLV.choiceMode = ListView.CHOICE_MODE_MULTIPLE
+        medicinskaKoristAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_multiple_choice,MedicinskaKorist.entries.map { it.opis })
+        medicinskaKoristLV.choiceMode = ListView.CHOICE_MODE_MULTIPLE
         medicinskaKoristLV.adapter = medicinskaKoristAdapter
 
         medicinskaKoristLV.onItemClickListener = AdapterView.OnItemClickListener { parent, view, position, id ->
@@ -76,7 +106,7 @@ class NovaBiljkaActivity : AppCompatActivity() {
 
         //KLIMATSKI TIP
         val klimatskiTipAdapter: ArrayAdapter<*>
-        klimatskiTipAdapter = ArrayAdapter(this, R.layout.simple_list_item_1,KlimatskiTip.entries.map { it.opis })
+        klimatskiTipAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_multiple_choice,KlimatskiTip.entries.map { it.opis })
         klimatskiTipLV.choiceMode = ListView.CHOICE_MODE_MULTIPLE
         klimatskiTipLV.adapter = klimatskiTipAdapter
         klimatskiTipLV.onItemClickListener = AdapterView.OnItemClickListener { parent, view, position, id ->
@@ -88,7 +118,7 @@ class NovaBiljkaActivity : AppCompatActivity() {
         }
         //ZEMLJISNI TIP
         val zemljisniTipAdapter: ArrayAdapter<*>
-        zemljisniTipAdapter = ArrayAdapter(this, R.layout.simple_list_item_1,Zemljiste.entries.map { it.naziv })
+        zemljisniTipAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_multiple_choice,Zemljiste.entries.map { it.naziv })
         zemljisniTipLV.choiceMode = ListView.CHOICE_MODE_MULTIPLE
         zemljisniTipLV.adapter = zemljisniTipAdapter
         zemljisniTipLV.onItemClickListener = AdapterView.OnItemClickListener { parent, view, position, id ->
@@ -100,19 +130,16 @@ class NovaBiljkaActivity : AppCompatActivity() {
         }
         //PROFIL OKUSA
         val profilOkusaAdapter: ArrayAdapter<*>
-        profilOkusaAdapter = ArrayAdapter(this, R.layout.simple_list_item_1,ProfilOkusaBiljke.entries.map { it.opis })
-        profilOkusaLV.choiceMode = ListView.CHOICE_MODE_MULTIPLE
+        profilOkusaAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_single_choice,ProfilOkusaBiljke.entries.map { it.opis })
+        profilOkusaLV.choiceMode = ListView.CHOICE_MODE_SINGLE
         profilOkusaLV.adapter = profilOkusaAdapter
         profilOkusaLV.onItemClickListener = AdapterView.OnItemClickListener { parent, view, position, id ->
             val item = ProfilOkusaBiljke.entries[position]
-            if (profiliOkusa.contains(item))
-                profiliOkusa.remove(item)
-            else
-                profiliOkusa.add(item)
+            profilOkusa = item
         }
         //JELO
         val jeloAdapter: ArrayAdapter<*>
-        jeloAdapter = ArrayAdapter(this, R.layout.simple_list_item_1,jela)
+        jeloAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1,jela)
         jelaLV.adapter = jeloAdapter
         jelaLV.onItemClickListener = AdapterView.OnItemClickListener { parent, view, position, id ->
             val item = jela[position]
@@ -156,7 +183,7 @@ class NovaBiljkaActivity : AppCompatActivity() {
                     porodicaET.text.toString(),
                     medicinskoUpozorenjeET.text.toString(),
                     medicinskeKoristi,
-                    profiliOkusa.first(),
+                    profilOkusa!!,
                     jela,
                     klimatskiTipovi,
                     zemljisniTipovi
@@ -169,9 +196,16 @@ class NovaBiljkaActivity : AppCompatActivity() {
         }
         //USLIKAJ BILJKU
         uslikajBiljkuBtn.setOnClickListener {
+            val values = ContentValues()
+            values.put(MediaStore.Images.Media.TITLE, "New Picture")
+            values.put(MediaStore.Images.Media.DESCRIPTION, "From Camera")
+            camUri = contentResolver.insert(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                values
+            )
             val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-            startActivityForResult(cameraIntent,1)
-            //camera.launch(cameraIntent)
+            cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, camUri)
+            camera.launch(cameraIntent)
         }
     }
     private fun validacijaPolja() : Boolean {
@@ -189,28 +223,49 @@ class NovaBiljkaActivity : AppCompatActivity() {
             t = false
         }
         if (medicinskeKoristi.isEmpty()) {
-            val toast = Toast.makeText(this, "text", Toast.LENGTH_SHORT) // in Activity
-            toast.show()
+            medicinskaKoristTV.requestFocus()
+            medicinskaKoristTV.error = "Morate izabrati medicinsku korist"
             t = false
+        }
+        else {
+            medicinskaKoristTV.clearFocus()
+            medicinskaKoristTV.error = null
         }
         if (klimatskiTipovi.isEmpty()) {
-            val toast = Toast.makeText(this, "text", Toast.LENGTH_SHORT) // in Activity
-            toast.show()
+            klimatskiTipTV.requestFocus()
+            klimatskiTipTV.error = "Morate izabrati klimatski tip"
             t = false
+        }
+        else {
+            klimatskiTipTV.clearFocus()
+            klimatskiTipTV.error = null
         }
         if (zemljisniTipovi.isEmpty()) {
-            val toast = Toast.makeText(this, "text", Toast.LENGTH_SHORT) // in Activity
-            toast.show()
+            zemljisniTipTV.requestFocus()
+            zemljisniTipTV.error = "Morate izabrati zemljisni tip"
             t = false
+        }
+        else {
+            zemljisniTipTV.clearFocus()
+            zemljisniTipTV.error = null
         }
         if (jela.isEmpty()) {
-            jeloET.error = "Niste dodali nijedno jelo"
+            jelaTV.requestFocus()
+            jelaTV.error = "Morate dodati jelo"
             t = false
         }
-        if (profiliOkusa.isEmpty()) {
-            val toast = Toast.makeText(this, "text", Toast.LENGTH_SHORT) // in Activity
-            toast.show()
+        else {
+            jelaTV.clearFocus()
+            jelaTV.error = null
+        }
+        if (profilOkusa == null) {
+            profilOkusaTV.requestFocus()
+            profilOkusaTV.error = "Morate izabrati profil okusa"
             t = false
+        }
+        else {
+            profilOkusaTV.clearFocus()
+            profilOkusaTV.error = null
         }
         return t
     }
