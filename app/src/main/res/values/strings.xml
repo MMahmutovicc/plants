@@ -5,6 +5,15 @@
         <item>Kuharski</item>
         <item>Botanički</item>
     </string-array>
+    <string-array name="bojaSPIN">
+        <item>red</item>
+        <item>blue</item>
+        <item>yellow</item>
+        <item>orange</item>
+        <item>purple</item>
+        <item>brown</item>
+        <item>green</item>
+    </string-array>
     <string name="reset">Reset</string>
     <string name="add_meal">Dodaj jelo</string>
     <string name="add_plant">Dodaj biljku</string>
@@ -18,4 +27,5 @@
     <string name="soil_type">Zemljisni tip</string>
     <string name="taste">Profil okusa</string>
     <string name="meals">Jela</string>
+    <string name="quick_search">Pretraga</string>
 </resources>

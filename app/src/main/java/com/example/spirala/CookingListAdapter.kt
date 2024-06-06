@@ -4,13 +4,16 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import android.content.Context
+import android.graphics.Bitmap
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 
 class CookingListAdapter(
     private var plants:MutableList<Biljka>,
-    private var allPlants:MutableList<Biljka>
+    private var allPlants:MutableList<Biljka>,
+    private var images: MutableList<Bitmap>,
+    private var allImages: MutableList<Bitmap>,
 ) : RecyclerView.Adapter<CookingListAdapter.CookingViewHolder>() {
     override fun getItemCount(): Int = plants.size
     override fun onCreateViewHolder(
@@ -26,31 +29,46 @@ class CookingListAdapter(
     override fun onBindViewHolder(holder: CookingViewHolder, position: Int) {
         holder.nazivItem.text = plants[position].naziv;
         holder.profilOkusaItem.text = plants[position].profilOkusa.opis;
-        holder.jelo1item.text = plants[position].jela[0];
-        if(plants[position].jela.size > 2) {
-            holder.jelo2item.text = plants[position].jela[1];
-            holder.jelo3item.text = plants[position].jela[2];
+        if (plants[position].jela.size > 2) {
+            holder.jelo1item.text = plants[position].jela[0]
+            holder.jelo2item.text = plants[position].jela[1]
+            holder.jelo3item.text = plants[position].jela[2]
         }
-        else if(plants[position].jela.size > 1) {
-            holder.jelo2item.text = plants[position].jela[1];
-            holder.jelo3item.text = "";
+        else if (plants[position].jela.size > 1) {
+            holder.jelo1item.text = plants[position].jela[0]
+            holder.jelo2item.text = plants[position].jela[1]
+            holder.jelo3item.text = ""
+        }
+        else if (plants[position].jela.isNotEmpty()) {
+            holder.jelo1item.text = plants[position].jela[0]
+            holder.jelo2item.text = ""
+            holder.jelo3item.text = ""
         }
         else {
-            holder.jelo2item.text = "";
-            holder.jelo3item.text = "";
+            holder.jelo1item.text = ""
+            holder.jelo2item.text = ""
+            holder.jelo3item.text = ""
         }
+        if(images.size == plants.size)
+            holder.slikaItem.setImageBitmap(images[position])
     }
 
-    fun updatePlants(plants: MutableList<Biljka>) {
+    fun updatePlants(plants: MutableList<Biljka>, images: MutableList<Bitmap>) {
         this.plants = plants
+        this.images = images
         notifyDataSetChanged()
     }
     fun getPlants(): MutableList<Biljka> {
         return plants
     }
 
-    fun setAllPlants(plants: MutableList<Biljka>) {
+    fun getImages(): MutableList<Bitmap> {
+        return images
+    }
+
+    fun setAllPlants(plants: MutableList<Biljka>, images: MutableList<Bitmap>) {
         this.allPlants = plants
+        this.allImages = images
     }
 
     inner class CookingViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -59,18 +77,26 @@ class CookingListAdapter(
         val jelo1item: TextView = itemView.findViewById(R.id.jelo1Item)
         val jelo2item: TextView = itemView.findViewById(R.id.jelo2Item)
         val jelo3item: TextView = itemView.findViewById(R.id.jelo3Item)
+        val slikaItem: ImageView = itemView.findViewById(R.id.slikaItem)
         init {
             itemView.setOnClickListener {
                 v ->
+                var hasAllImages = allPlants.size == allImages.size
                 var newPlants = mutableListOf<Biljka>()
-                for (biljka in allPlants) {
-                    if (plants[adapterPosition].profilOkusa == biljka.profilOkusa)
+                var newImages = mutableListOf<Bitmap>()
+                for ((index, biljka) in allPlants.withIndex()) {
+                    if (plants[adapterPosition].profilOkusa == biljka.profilOkusa) {
                         newPlants.add(biljka)
+                        if(hasAllImages)
+                            newImages.add(allImages[index])
+                    }
                     else if (biljka.jela.any {it in plants[adapterPosition].jela}) {
                         newPlants.add(biljka)
+                        if(hasAllImages)
+                            newImages.add(allImages[index])
                     }
                 }
-                updatePlants(newPlants)
+                updatePlants(newPlants, newImages)
             }
         }
     }

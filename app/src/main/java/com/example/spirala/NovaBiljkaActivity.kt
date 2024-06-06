@@ -8,19 +8,22 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.ListAdapter
 import android.widget.ListView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContentProviderCompat.requireContext
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
 
 class NovaBiljkaActivity : AppCompatActivity() {
@@ -63,13 +66,7 @@ class NovaBiljkaActivity : AppCompatActivity() {
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //enableEdgeToEdge()
         setContentView(R.layout.activity_nova_biljka)
-        /*ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }*/
 
         slikaIV = findViewById(R.id.slikaIV)
         nazivET = findViewById(R.id.nazivET)
@@ -95,7 +92,7 @@ class NovaBiljkaActivity : AppCompatActivity() {
         medicinskaKoristAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_multiple_choice,MedicinskaKorist.entries.map { it.opis })
         medicinskaKoristLV.choiceMode = ListView.CHOICE_MODE_MULTIPLE
         medicinskaKoristLV.adapter = medicinskaKoristAdapter
-
+        //setListViewHeightBasedOnChildren(medicinskaKoristLV)
         medicinskaKoristLV.onItemClickListener = AdapterView.OnItemClickListener { parent, view, position, id ->
             val item = MedicinskaKorist.entries[position]
             if (medicinskeKoristi.contains(item))
@@ -109,6 +106,7 @@ class NovaBiljkaActivity : AppCompatActivity() {
         klimatskiTipAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_multiple_choice,KlimatskiTip.entries.map { it.opis })
         klimatskiTipLV.choiceMode = ListView.CHOICE_MODE_MULTIPLE
         klimatskiTipLV.adapter = klimatskiTipAdapter
+        setListViewHeightBasedOnItems(klimatskiTipLV)
         klimatskiTipLV.onItemClickListener = AdapterView.OnItemClickListener { parent, view, position, id ->
             val item = KlimatskiTip.entries[position]
             if (klimatskiTipovi.contains(item))
@@ -121,6 +119,7 @@ class NovaBiljkaActivity : AppCompatActivity() {
         zemljisniTipAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_multiple_choice,Zemljiste.entries.map { it.naziv })
         zemljisniTipLV.choiceMode = ListView.CHOICE_MODE_MULTIPLE
         zemljisniTipLV.adapter = zemljisniTipAdapter
+        //setListViewHeightBasedOnChildren(zemljisniTipLV)
         zemljisniTipLV.onItemClickListener = AdapterView.OnItemClickListener { parent, view, position, id ->
             val item = Zemljiste.entries[position]
             if (zemljisniTipovi.contains(item))
@@ -133,6 +132,7 @@ class NovaBiljkaActivity : AppCompatActivity() {
         profilOkusaAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_single_choice,ProfilOkusaBiljke.entries.map { it.opis })
         profilOkusaLV.choiceMode = ListView.CHOICE_MODE_SINGLE
         profilOkusaLV.adapter = profilOkusaAdapter
+        //setListViewHeightBasedOnChildren(profilOkusaLV)
         profilOkusaLV.onItemClickListener = AdapterView.OnItemClickListener { parent, view, position, id ->
             val item = ProfilOkusaBiljke.entries[position]
             profilOkusa = item
@@ -178,7 +178,8 @@ class NovaBiljkaActivity : AppCompatActivity() {
         //DODAJ BILJKU
         dodajBiljkuBtn.setOnClickListener {
             if(validacijaPolja()) {
-                val biljka = Biljka(
+                val scope = CoroutineScope(Job() + Dispatchers.Main)
+                var biljka = Biljka(
                     nazivET.text.toString(),
                     porodicaET.text.toString(),
                     medicinskoUpozorenjeET.text.toString(),
@@ -188,10 +189,14 @@ class NovaBiljkaActivity : AppCompatActivity() {
                     klimatskiTipovi,
                     zemljisniTipovi
                 )
-                val resultIntent = Intent()
-                resultIntent.putExtra("newPlant",biljka)
-                setResult(RESULT_OK,resultIntent)
-                finish()
+                val trefleDAO = TrefleDAO(applicationContext)
+                scope.launch {
+                    val result = trefleDAO.fixData(biljka)
+                    val resultIntent = Intent()
+                    resultIntent.putExtra("newPlant",result)
+                    setResult(RESULT_OK,resultIntent)
+                    finish()
+                }
             }
         }
         //USLIKAJ BILJKU
@@ -210,8 +215,12 @@ class NovaBiljkaActivity : AppCompatActivity() {
     }
     private fun validacijaPolja() : Boolean {
         var t = true
-        if(nazivET.text.length < 2 || nazivET.text.length > 20) {
+        if(nazivET.text.length < 2 || nazivET.text.length > 40) {
             nazivET.error = "Neispravna duzina"
+            t = false
+        }
+        if(!nazivET.text.contains(Regex("""\([a-zA-Z ]*\)"""))) {
+            nazivET.error = "Latinski naziv je obavezan"
             t = false
         }
         if(porodicaET.text.length < 2 || porodicaET.text.length > 20) {
@@ -268,5 +277,54 @@ class NovaBiljkaActivity : AppCompatActivity() {
             profilOkusaTV.error = null
         }
         return t
+    }
+    fun setListViewHeightBasedOnChildren(listView: ListView) {
+        val listAdapter = listView.adapter ?: return
+        var totalHeight = 0
+        for (i in 0 until listAdapter.count) {
+            val listItem = listAdapter.getView(i, null, listView)
+            listItem.measure(
+                View.MeasureSpec.makeMeasureSpec(listView.width, View.MeasureSpec.UNSPECIFIED),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+            )
+            totalHeight += listItem.measuredHeight
+        }
+        val params = listView.layoutParams
+        params.height = totalHeight + (listView.dividerHeight * (listAdapter.count - 1))
+        listView.layoutParams = params
+        listView.requestLayout()
+    }
+    fun setListViewHeightBasedOnItems(listView: ListView): Boolean {
+        val listAdapter: ListAdapter? = listView.adapter
+        return if (listAdapter != null) {
+            val numberOfItems: Int = listAdapter.getCount()
+
+            // Get total height of all items.
+            var totalItemsHeight = 0
+            for (itemPos in 0 until numberOfItems) {
+                val item: View = listAdapter.getView(itemPos, null, listView)
+                val px = 500 * listView.resources.displayMetrics.density
+                item.measure(
+                    View.MeasureSpec.makeMeasureSpec(px.toInt(), View.MeasureSpec.AT_MOST),
+                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+                )
+                totalItemsHeight += item.measuredHeight
+            }
+
+            // Get total height of all item dividers.
+            val totalDividersHeight = listView.dividerHeight *
+                    (numberOfItems - 1)
+            // Get padding
+            val totalPadding = listView.paddingTop + listView.paddingBottom
+
+            // Set list height.
+            val params = listView.layoutParams
+            params.height = totalItemsHeight + totalDividersHeight + totalPadding
+            listView.setLayoutParams(params)
+            listView.requestLayout()
+            true
+        } else {
+            false
+        }
     }
 }

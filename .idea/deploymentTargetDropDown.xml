@@ -5,21 +5,6 @@
       <entry key="app">
         <State />
       </entry>
-      <entry key="dvaIstaJela()">
-        <State />
-      </entry>
-      <entry key="dvaIstaJelaNakonIzmjene()">
-        <State />
-      </entry>
-      <entry key="maloKarakteraNakonIzmjene()">
-        <State />
-      </entry>
-      <entry key="premaloKaraktera()">
-        <State />
-      </entry>
-      <entry key="previseKaraktera()">
-        <State />
-      </entry>
     </value>
   </component>
 </project>
