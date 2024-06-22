@@ -12,9 +12,9 @@ import android.widget.TextView
 class BotanicalListAdapter(
     private var plants:MutableList<Biljka>,
     private var allPlants: MutableList<Biljka>,
-    private var images: MutableList<Bitmap>,
-    private var allImages: MutableList<Bitmap>,
-    private var flower_color : Int = 0
+    private var images: MutableMap<Long,Bitmap>,
+    private var flowerColorImages: MutableList<Bitmap> = mutableListOf(),
+    private var flowerColor : Int = 0
 ) : RecyclerView.Adapter<BotanicalListAdapter.BotanicalViewHolder>() {
     override fun getItemCount(): Int = plants.size
     override fun onCreateViewHolder(
@@ -38,36 +38,40 @@ class BotanicalListAdapter(
             holder.zemljisniTipItem.text = plants[position].zemljisniTipovi[0].naziv;
         else
             holder.zemljisniTipItem.text = "";
-        if(images.size == plants.size)
-            holder.slikaItem.setImageBitmap(images[position])
+        if (flowerColor == 0 && images.containsKey(plants[position].id))
+            holder.slikaItem.setImageBitmap(images[plants[position].id])
+        else if (flowerColor == 1 && flowerColorImages.size == plants.size)
+            holder.slikaItem.setImageBitmap(flowerColorImages[position])
     }
 
-    fun updatePlants(plants: MutableList<Biljka>, images: MutableList<Bitmap>, flower_color: Int = 0) {
-        this.flower_color = flower_color
+    fun updatePlants(plants: MutableList<Biljka>, flowerColor: Int = 0, images: MutableList<Bitmap> = this.flowerColorImages) {
+        this.flowerColor = flowerColor
         this.plants = plants
-        this.images = images
+        this.flowerColorImages = images
         notifyDataSetChanged()
     }
     fun getPlants(): MutableList<Biljka> {
-        if (flower_color == 1) {
-            flower_color = 0
+        if (flowerColor == 1) {
+            flowerColor = 0
             return allPlants
         }
         return plants
     }
 
-    fun setAllPlants(plants: MutableList<Biljka>, images: MutableList<Bitmap>) {
+    fun updateAll(plants: MutableList<Biljka>, images: MutableMap<Long,Bitmap>) {
+        this.plants - plants
         this.allPlants = plants
-        this.allImages = images
+        this.images = images
+        notifyDataSetChanged()
     }
 
-    fun getImages(): MutableList<Bitmap> {
-        if (flower_color == 1) {
-            flower_color = 0
+    /*fun getImages(): MutableList<Bitmap> {
+        if (flowerColor == 1) {
+            flowerColor = 0
             return allImages
         }
         return images
-    }
+    }*/
 
     inner class BotanicalViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val nazivItem: TextView = itemView.findViewById(R.id.nazivItem)
@@ -78,21 +82,17 @@ class BotanicalListAdapter(
         init {
             itemView.setOnClickListener {
                     v ->
-                if (flower_color == 0) {
-                    val hasAllImages = allPlants.size == allImages.size
+                if (flowerColor == 0) {
                     var newPlants = mutableListOf<Biljka>()
-                    var newImages = mutableListOf<Bitmap>()
-                    for ((index, biljka) in allPlants.withIndex()) {
-                        if (plants[adapterPosition].porodica == biljka.porodica) {
-                            if (biljka.klimatskiTipovi.any {it in plants[adapterPosition].klimatskiTipovi} &&
-                                biljka.zemljisniTipovi.any {it in plants[adapterPosition].zemljisniTipovi}) {
-                                newPlants.add(biljka)
-                                if (hasAllImages)
-                                    newImages.add(allImages[index])
+                    for (plant in allPlants) {
+                        if (plants[adapterPosition].porodica == plant.porodica) {
+                            if (plant.klimatskiTipovi.any {it in plants[adapterPosition].klimatskiTipovi} &&
+                                plant.zemljisniTipovi.any {it in plants[adapterPosition].zemljisniTipovi}) {
+                                newPlants.add(plant)
                             }
                         }
                     }
-                    updatePlants(newPlants, newImages)
+                    updatePlants(newPlants)
                 }
             }
         }

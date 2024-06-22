@@ -32,10 +32,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var brzaPretraga: Button
     private lateinit var secondRow: ConstraintLayout
 
-    private var plantsList = getPLants()
-    private var allPlants = getPLants()
-    private var images = mutableListOf<Bitmap>()
-    private var allImages = mutableListOf<Bitmap>()
+    private var plantsList = mutableListOf<Biljka>()
+    //private var allPlants = getPLants()
+    private var images = mutableMapOf<Long,Bitmap>()
     private var flowerColor : String = "red"
 
 
@@ -57,25 +56,11 @@ class MainActivity : AppCompatActivity() {
                 val data: Intent? = result.data
                 val newPlant : Biljka? = data?.getParcelableExtra("newPlant")
                 if (newPlant != null) {
-                    getImage(newPlant)
-                    plantsList.add(newPlant)
-                    allPlants.add(newPlant)
-                    medicalListAdapter.setAllPlants(allPlants, allImages)
-                    botanicalListAdapter.setAllPlants(allPlants, allImages)
-                    cookingListAdapter.setAllPlants(allPlants, allImages)
-                    if(biljkeRV.adapter == medicalListAdapter)
-                        medicalListAdapter.updatePlants(plantsList, images)
-                    else if(biljkeRV.adapter == botanicalListAdapter)
-                        botanicalListAdapter.updatePlants(plantsList, images)
-                    else
-                        cookingListAdapter.updatePlants(plantsList, images)
-                    val toast = Toast.makeText(this, "Uspješno ste dodali novu biljku", Toast.LENGTH_SHORT) // in Activity
-                    toast.show()
+                    savePlant(newPlant)
                 }
             }
         }
-        getImages()
-        Log.d("slike", "${allImages.size}")
+        //checkDatabase()
         secondRow = findViewById(R.id.secondRow)
         modSpinner = findViewById(R.id.modSpinner)
         bojaSPIN = findViewById(R.id.bojaSPIN)
@@ -118,33 +103,33 @@ class MainActivity : AppCompatActivity() {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 if(biljkeRV.adapter == medicalListAdapter) {
                     plantsList = medicalListAdapter.getPlants()
-                    images = medicalListAdapter.getImages()
+                    //images = medicalListAdapter.getImages()
                 }
                 else if(biljkeRV.adapter == botanicalListAdapter) {
                     plantsList = botanicalListAdapter.getPlants()
-                    images = botanicalListAdapter.getImages()
+                    //images = botanicalListAdapter.getImages()
                 }
                 else {
                     plantsList = cookingListAdapter.getPlants()
-                    images = cookingListAdapter.getImages()
+                    //images = cookingListAdapter.getImages()
                 }
                 if(position == 0) {
                     secondRow.visibility = View.GONE
                     biljkeRV.adapter = medicalListAdapter
-                    medicalListAdapter.updatePlants(plantsList, images)
-                    medicalListAdapter.setAllPlants(allPlants, allImages)
+                    medicalListAdapter.updatePlants(plantsList)
+                    //medicalListAdapter.setAllPlants(allPlants, allImages)
                 }
                 else if(position == 1) {
                     secondRow.visibility = View.GONE
                     biljkeRV.adapter = cookingListAdapter
-                    cookingListAdapter.updatePlants(plantsList, images)
-                    cookingListAdapter.setAllPlants(allPlants, allImages)
+                    cookingListAdapter.updatePlants(plantsList)
+                    //cookingListAdapter.setAllPlants(allPlants, allImages)
                 }
                 else if(position == 2) {
                     secondRow.visibility = View.VISIBLE
                     biljkeRV.adapter = botanicalListAdapter
-                    botanicalListAdapter.updatePlants(plantsList, images)
-                    botanicalListAdapter.setAllPlants(allPlants, allImages)
+                    botanicalListAdapter.updatePlants(plantsList)
+                    //botanicalListAdapter.setAllPlants(allPlants, allImages)
                 }
             }
         }
@@ -153,31 +138,90 @@ class MainActivity : AppCompatActivity() {
                 getPlantsWithFlowerColor()
         }
         resetBtn.setOnClickListener {
-            plantsList = allPlants
-            images = allImages
-            if(biljkeRV.adapter == medicalListAdapter) {
-                medicalListAdapter.updatePlants(plantsList, images)
-            }
-            else if(biljkeRV.adapter == botanicalListAdapter) {
-                botanicalListAdapter.updatePlants(plantsList, images)
-            }
-            else {
-                cookingListAdapter.updatePlants(plantsList, images)
-            }
+            getAllPlants()
         }
         novaBiljkaBtn.setOnClickListener {
             secondRow.visibility = View.GONE
             val intent = Intent(this, NovaBiljkaActivity::class.java)
             addPlant.launch(intent)
         }
-        medicalListAdapter = MedicalListAdapter(mutableListOf(), mutableListOf(), mutableListOf(), mutableListOf())
+
+        medicalListAdapter = MedicalListAdapter(plantsList, plantsList, images)
+
+        botanicalListAdapter = BotanicalListAdapter(plantsList, plantsList, images)
+
+        cookingListAdapter = CookingListAdapter(plantsList, plantsList, images)
+
         biljkeRV.adapter = medicalListAdapter
-        medicalListAdapter.updatePlants(plantsList, images)
-        medicalListAdapter.setAllPlants(allPlants, allImages)
+        setup()
+    }
 
-        botanicalListAdapter = BotanicalListAdapter(mutableListOf(),mutableListOf(), mutableListOf(),mutableListOf())
+    private fun getAllImages() {
+        val scope = CoroutineScope(Job() + Dispatchers.Main)
+        scope.launch {
+            var db = BiljkaDatabase.getInstance(applicationContext)
+            for (plant in plantsList) {
+                var idBiljke : Long? = plant.id
+                if (idBiljke != null) {
+                    var bitmap : Bitmap? = db.biljkaDao().getImage(idBiljke)?.bitmap
+                    if (bitmap != null)
+                        images[idBiljke] = bitmap
+                    else {
+                        val trefleDAO = TrefleDAO(applicationContext)
+                        val newBitmap = trefleDAO.getImage(plant)
+                        db.biljkaDao().addImage(idBiljke,newBitmap)
+                        images[idBiljke] = newBitmap
+                    }
+                }
+            }
+        }
+    }
+    private fun setup() {
+        val scope = CoroutineScope(Job() + Dispatchers.Main)
+        scope.launch {
+            var db = BiljkaDatabase.getInstance(applicationContext)
+            plantsList = db.biljkaDao().getAllBiljkas().toMutableList()
+            medicalListAdapter.updatePlants(plantsList)
+        }
+    }
+    private fun getAllPlants() {
+        val scope = CoroutineScope(Job() + Dispatchers.Main)
+        scope.launch {
+            var db = BiljkaDatabase.getInstance(applicationContext)
+            plantsList = db.biljkaDao().getAllBiljkas().toMutableList()
 
-        cookingListAdapter = CookingListAdapter(mutableListOf(),mutableListOf(), mutableListOf(),mutableListOf())
+            if(biljkeRV.adapter == medicalListAdapter) {
+                medicalListAdapter.updateAll(plantsList,images)
+            }
+            else if(biljkeRV.adapter == botanicalListAdapter) {
+                botanicalListAdapter.updatePlants(plantsList)
+            }
+            else {
+                cookingListAdapter.updatePlants(plantsList)
+            }
+        }
+    }
+
+    private fun savePlant(newPlant: Biljka) {
+        val scope = CoroutineScope(Job() + Dispatchers.Main)
+        scope.launch {
+            var db = BiljkaDatabase.getInstance(applicationContext)
+            var isAdded = db.biljkaDao().saveBiljka(newPlant)
+            plantsList = db.biljkaDao().getAllBiljkas().toMutableList()
+            medicalListAdapter.updatePlants(plantsList)
+            biljkeRV.adapter = medicalListAdapter
+        }
+    }
+
+    private fun checkDatabase() {
+        val scope = CoroutineScope(Job() + Dispatchers.Main)
+        scope.launch {
+            var db = BiljkaDatabase.getInstance(applicationContext)
+            //db.biljkaDao().clearData()
+            var biljke = db.biljkaDao().getAllBiljkas()
+            for (biljka in biljke)
+                Log.d("BAZA", biljka.naziv)
+        }
     }
 
     private fun getPlantsWithFlowerColor() {
@@ -185,6 +229,7 @@ class MainActivity : AppCompatActivity() {
         toast.show()
         val substr = pretragaET.text.toString()
         val trefleDAO = TrefleDAO(applicationContext)
+        Log.d("poziv", "pozvan")
         val scope = CoroutineScope(Job() + Dispatchers.Main)
         scope.launch {
             val results = trefleDAO.getPlantsWithFlowerColor(flowerColor, substr)
@@ -193,16 +238,16 @@ class MainActivity : AppCompatActivity() {
                 val imageResult = trefleDAO.getImage(plant)
                 plantsImages.add(imageResult)
             }
-            Log.d("poziv", "biljke="+results.size.toString()+" slike="+plantsImages.size.toString())
-            botanicalListAdapter.updatePlants(results.toMutableList(), plantsImages, 1)
+            botanicalListAdapter.updatePlants(results.toMutableList(), 1,plantsImages)
         }
     }
 
-    private fun getImage(newPlant: Biljka) {
+    /*private fun getImage(newPlant: Biljka) {
         val scope = CoroutineScope(Job() + Dispatchers.Main)
-        val trefleDAO = TrefleDAO(applicationContext)
+
         scope.launch {
                 val result = trefleDAO.getImage(newPlant)
+
                 allImages.add(result)
                 images.add(result)
         }
@@ -224,5 +269,5 @@ class MainActivity : AppCompatActivity() {
             cookingListAdapter.updatePlants(plantsList, images)
             botanicalListAdapter.updatePlants(plantsList, images)
         }
-    }
+    }*/
 }

@@ -9,12 +9,15 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import com.bumptech.glide.Glide
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
 class MedicalListAdapter(
     private var plants:MutableList<Biljka>,
     private var allPlants:MutableList<Biljka>,
-    private var images: MutableList<Bitmap>,
-    private var allImages: MutableList<Bitmap>,
+    private var images: MutableMap<Long,Bitmap>
 ) : RecyclerView.Adapter<MedicalListAdapter.MedicalViewHolder>() {
     override fun getItemCount(): Int = plants.size
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MedicalViewHolder {
@@ -45,24 +48,25 @@ class MedicalListAdapter(
             holder.korist2item.text = ""
             holder.korist3item.text = ""
         }
-        if(images.size == plants.size)
-            holder.slikaItem.setImageBitmap(images[position])
+        if(images.containsKey(plants[position].id))
+            holder.slikaItem.setImageBitmap(images[plants[position].id])
         //println("bitmap=${images[position]}")
     }
-    fun updatePlants(plants: MutableList<Biljka>, images: MutableList<Bitmap>) {
+    fun updatePlants(plants: MutableList<Biljka>) {
         this.plants = plants
-        this.images = images
         notifyDataSetChanged()
     }
     fun getPlants(): MutableList<Biljka> {
         return plants
     }
-    fun getImages(): MutableList<Bitmap> {
+    /*fun getImages(): MutableMap<Long,Bitmap> {
         return images
-    }
-    fun setAllPlants(plants: MutableList<Biljka>, images: MutableList<Bitmap>) {
+    }*/
+    fun updateAll(plants: MutableList<Biljka>,images: MutableMap<Long,Bitmap>) {
+        this.plants = plants
         this.allPlants = plants
-        this.allImages = images
+        this.images = images
+        notifyDataSetChanged()
     }
 
     inner class MedicalViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -75,17 +79,13 @@ class MedicalListAdapter(
         init {
             itemView.setOnClickListener {
                 v ->
-                var hasAllImages = allPlants.size == allImages.size
                 var newPlants = mutableListOf<Biljka>()
-                var newImages = mutableListOf<Bitmap>()
-                for ((index, biljka) in allPlants.withIndex()) {
-                        if(biljka.medicinskeKoristi.any {it in plants[adapterPosition].medicinskeKoristi}) {
-                            newPlants.add(biljka)
-                            if(hasAllImages)
-                                newImages.add(allImages[index])
+                for (plant in allPlants) {
+                        if(plant.medicinskeKoristi.any {it in plants[adapterPosition].medicinskeKoristi}) {
+                            newPlants.add(plant)
                         }
                 }
-                updatePlants(newPlants, newImages)
+                updatePlants(newPlants)
             }
         }
     }

@@ -2,7 +2,35 @@
 <project version="4">
   <component name="deploymentTargetDropDown">
     <value>
+      <entry key="BiljkeDB4test">
+        <State>
+          <targetSelectedWithDropDown>
+            <Target>
+              <type value="QUICK_BOOT_TARGET" />
+              <deviceKey>
+                <Key>
+                  <type value="VIRTUAL_DEVICE_PATH" />
+                  <value value="C:\Users\mirza\.android\avd\Pixel_8_Pro_API_30.avd" />
+                </Key>
+              </deviceKey>
+            </Target>
+          </targetSelectedWithDropDown>
+          <timeTargetWasSelectedWithDropDown value="2024-06-12T14:57:40.154271700Z" />
+        </State>
+      </entry>
+      <entry key="TestS2">
+        <State />
+      </entry>
       <entry key="app">
+        <State />
+      </entry>
+      <entry key="dvaIstaJelaNakonIzmjene()">
+        <State />
+      </entry>
+      <entry key="maloKarakteraNakonIzmjene()">
+        <State />
+      </entry>
+      <entry key="premaloKaraktera()">
         <State />
       </entry>
     </value>

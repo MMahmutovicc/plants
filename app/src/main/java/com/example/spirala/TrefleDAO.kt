@@ -18,9 +18,6 @@ import java.net.URL
 
 class TrefleDAO {
     private val trefle_token = BuildConfig.TREFLE_TOKEN
-    //private val defaultBitmap : Bitmap = BitmapFactory.decodeStream(URL("https://d2jx2rerrg6sh3.cloudfront.net/image-handler/ts/20231010081754/ri/950/src/images/news/ImageForNews_761308_16969834687268837.jpg").openConnection().getInputStream())
-    //https://bs.plantnet.org/image/o/73507975ac242e85f08b73e35452602d0d21a477
-    //https://d2jx2rerrg6sh3.cloudfront.net/image-handler/ts/20231010081754/ri/950/src/images/news/ImageForNews_761308_16969834687268837.jpg
     private lateinit var defaultBitmap : Bitmap
     private val soils = mapOf(
         1 to Zemljiste.GLINENO,
@@ -87,8 +84,6 @@ class TrefleDAO {
                     }
                     if(plant.growth.soilTexture != null) {
                         val newTypes = mutableListOf<Zemljiste>()
-                        //val numbers = Regex("\\d+").findAll(soilTexture).map { it.value }.toList()
-                        //for(number in numbers) {}
                         if (soils.containsKey(plant.growth.soilTexture)) {
                             newTypes.add(soils.getValue(plant.growth.soilTexture))
                         }

@@ -8,6 +8,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Log
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
@@ -92,7 +93,7 @@ class NovaBiljkaActivity : AppCompatActivity() {
         medicinskaKoristAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_multiple_choice,MedicinskaKorist.entries.map { it.opis })
         medicinskaKoristLV.choiceMode = ListView.CHOICE_MODE_MULTIPLE
         medicinskaKoristLV.adapter = medicinskaKoristAdapter
-        //setListViewHeightBasedOnChildren(medicinskaKoristLV)
+        setListViewHeightBasedOnItems(medicinskaKoristLV, 3)
         medicinskaKoristLV.onItemClickListener = AdapterView.OnItemClickListener { parent, view, position, id ->
             val item = MedicinskaKorist.entries[position]
             if (medicinskeKoristi.contains(item))
@@ -106,7 +107,7 @@ class NovaBiljkaActivity : AppCompatActivity() {
         klimatskiTipAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_multiple_choice,KlimatskiTip.entries.map { it.opis })
         klimatskiTipLV.choiceMode = ListView.CHOICE_MODE_MULTIPLE
         klimatskiTipLV.adapter = klimatskiTipAdapter
-        setListViewHeightBasedOnItems(klimatskiTipLV)
+        setListViewHeightBasedOnItems(klimatskiTipLV, 3)
         klimatskiTipLV.onItemClickListener = AdapterView.OnItemClickListener { parent, view, position, id ->
             val item = KlimatskiTip.entries[position]
             if (klimatskiTipovi.contains(item))
@@ -119,7 +120,7 @@ class NovaBiljkaActivity : AppCompatActivity() {
         zemljisniTipAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_multiple_choice,Zemljiste.entries.map { it.naziv })
         zemljisniTipLV.choiceMode = ListView.CHOICE_MODE_MULTIPLE
         zemljisniTipLV.adapter = zemljisniTipAdapter
-        //setListViewHeightBasedOnChildren(zemljisniTipLV)
+        setListViewHeightBasedOnItems(zemljisniTipLV, 3)
         zemljisniTipLV.onItemClickListener = AdapterView.OnItemClickListener { parent, view, position, id ->
             val item = Zemljiste.entries[position]
             if (zemljisniTipovi.contains(item))
@@ -132,7 +133,7 @@ class NovaBiljkaActivity : AppCompatActivity() {
         profilOkusaAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_single_choice,ProfilOkusaBiljke.entries.map { it.opis })
         profilOkusaLV.choiceMode = ListView.CHOICE_MODE_SINGLE
         profilOkusaLV.adapter = profilOkusaAdapter
-        //setListViewHeightBasedOnChildren(profilOkusaLV)
+        setListViewHeightBasedOnItems(profilOkusaLV, 4)
         profilOkusaLV.onItemClickListener = AdapterView.OnItemClickListener { parent, view, position, id ->
             val item = ProfilOkusaBiljke.entries[position]
             profilOkusa = item
@@ -161,6 +162,7 @@ class NovaBiljkaActivity : AppCompatActivity() {
                     dodajJeloBtn.text = "Dodaj jelo"
                     jeloET.setText("")
                     jeloAdapter.notifyDataSetChanged()
+                    setListViewHeightBasedOnItems(jelaLV, 0)
                 }
             }
             else {
@@ -172,6 +174,7 @@ class NovaBiljkaActivity : AppCompatActivity() {
                 else {
                     jela.add(jeloET.text.toString())
                     jeloAdapter.notifyDataSetChanged()
+                    setListViewHeightBasedOnItems(jelaLV, 0)
                 }
             }
         }
@@ -220,7 +223,8 @@ class NovaBiljkaActivity : AppCompatActivity() {
             t = false
         }
         if(!nazivET.text.contains(Regex("""\([a-zA-Z ]*\)"""))) {
-            nazivET.error = "Latinski naziv je obavezan"
+            if (nazivET.error.isNullOrEmpty())
+                nazivET.error = "Latinski naziv je obavezan"
             t = false
         }
         if(porodicaET.text.length < 2 || porodicaET.text.length > 20) {
@@ -278,53 +282,22 @@ class NovaBiljkaActivity : AppCompatActivity() {
         }
         return t
     }
-    fun setListViewHeightBasedOnChildren(listView: ListView) {
-        val listAdapter = listView.adapter ?: return
-        var totalHeight = 0
-        for (i in 0 until listAdapter.count) {
-            val listItem = listAdapter.getView(i, null, listView)
-            listItem.measure(
-                View.MeasureSpec.makeMeasureSpec(listView.width, View.MeasureSpec.UNSPECIFIED),
-                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-            )
-            totalHeight += listItem.measuredHeight
-        }
-        val params = listView.layoutParams
-        params.height = totalHeight + (listView.dividerHeight * (listAdapter.count - 1))
-        listView.layoutParams = params
-        listView.requestLayout()
-    }
-    fun setListViewHeightBasedOnItems(listView: ListView): Boolean {
+    fun setListViewHeightBasedOnItems(listView: ListView, modification: Int) {
         val listAdapter: ListAdapter? = listView.adapter
-        return if (listAdapter != null) {
-            val numberOfItems: Int = listAdapter.getCount()
-
-            // Get total height of all items.
-            var totalItemsHeight = 0
-            for (itemPos in 0 until numberOfItems) {
-                val item: View = listAdapter.getView(itemPos, null, listView)
-                val px = 500 * listView.resources.displayMetrics.density
-                item.measure(
-                    View.MeasureSpec.makeMeasureSpec(px.toInt(), View.MeasureSpec.AT_MOST),
-                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        if (listAdapter != null) {
+            var itemHeight = 0
+            if (listAdapter.count != 0) {
+                val itemView : View = listAdapter.getView(0, null, listView)
+                itemView.measure(
+                    View.MeasureSpec.makeMeasureSpec(listView.width, View.MeasureSpec.UNSPECIFIED),
+                    View.MeasureSpec.UNSPECIFIED
                 )
-                totalItemsHeight += item.measuredHeight
+                itemHeight = itemView.measuredHeight
             }
-
-            // Get total height of all item dividers.
-            val totalDividersHeight = listView.dividerHeight *
-                    (numberOfItems - 1)
-            // Get padding
-            val totalPadding = listView.paddingTop + listView.paddingBottom
-
-            // Set list height.
             val params = listView.layoutParams
-            params.height = totalItemsHeight + totalDividersHeight + totalPadding
-            listView.setLayoutParams(params)
+            params.height = (itemHeight + listView.dividerHeight) * (listAdapter.count + modification)
+            listView.layoutParams = params
             listView.requestLayout()
-            true
-        } else {
-            false
         }
     }
 }

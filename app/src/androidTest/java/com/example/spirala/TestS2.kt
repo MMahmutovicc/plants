@@ -4,6 +4,8 @@ import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.replaceText
+import androidx.test.espresso.action.ViewActions.scrollTo
+import androidx.test.espresso.action.ViewActions.swipeUp
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.intent.rule.IntentsTestRule
@@ -33,7 +35,7 @@ class TestS2 {
     @Test
     fun premaloKaraktera() {
         onView(withId(R.id.nazivET)).perform(typeText("N"))
-        onView(withId(R.id.dodajBiljkuBtn)).perform(click())
+        onView(withId(R.id.dodajBiljkuBtn)).perform(scrollTo(),click())
 
         onView(withId(R.id.nazivET)).check(matches(not(hasErrorText(""))))
         onView(withId(R.id.porodicaET)).check(matches(not(hasErrorText(""))))
@@ -43,11 +45,11 @@ class TestS2 {
 
     @Test
     fun previseKaraktera() {
-        onView(withId(R.id.nazivET)).perform(typeText("Duzina ovog stringa je veca od 20 karaktera"))
+        onView(withId(R.id.nazivET)).perform(typeText("Duzina ovog stringa je veca od 20 karaktera<"))
         onView(withId(R.id.porodicaET)).perform(typeText("Duzina ovog stringa je veca od 20 karaktera"))
         onView(withId(R.id.medicinskoUpozorenjeET)).perform(typeText("Ispravna duzina"))
 
-        onView(withId(R.id.dodajBiljkuBtn)).perform(click())
+        onView(withId(R.id.dodajBiljkuBtn)).perform(scrollTo(), click())
         onView(withId(R.id.nazivET)).check(matches(hasErrorText("Neispravna duzina")))
         onView(withId(R.id.porodicaET)).check(matches(hasErrorText("Neispravna duzina")))
         onView(withId(R.id.medicinskoUpozorenjeET)).check(matches(not(hasErrorText("Neispravna duzina"))))
@@ -55,10 +57,10 @@ class TestS2 {
     @Test
     fun dvaIstaJela() {
         onView(withId(R.id.jeloET)).perform(typeText("Grah"))
-        onView(withId(R.id.dodajJeloBtn)).perform(click())
+        onView(withId(R.id.dodajJeloBtn)).perform(scrollTo(), click())
 
         onView(withId(R.id.jeloET)).perform(replaceText("grah"))
-        onView(withId(R.id.dodajJeloBtn)).perform(click())
+        onView(withId(R.id.dodajJeloBtn)).perform(scrollTo(), click())
 
         onView(withId(R.id.jeloET)).check(matches(hasErrorText("Jelo vec spremljeno")))
 
@@ -66,44 +68,42 @@ class TestS2 {
     @Test
     fun dvaIstaJelaNakonIzmjene() {
         onView(withId(R.id.jeloET)).perform(typeText("Grah"))
-        onView(withId(R.id.dodajJeloBtn)).perform(click())
+        onView(withId(R.id.dodajJeloBtn)).perform(scrollTo(), click())
 
         onView(withId(R.id.jeloET)).perform(replaceText("gulas"))
-        onView(withId(R.id.dodajJeloBtn)).perform(click())
+        onView(withId(R.id.dodajJeloBtn)).perform(scrollTo(), click())
 
         onData(allOf(`is`("gulas"))).inAdapterView(allOf(withId(R.id.jelaLV), isDisplayed())).perform(click())
 
         onView(withId(R.id.jeloET)).perform(replaceText("grah"))
-        onView(withId(R.id.dodajJeloBtn)).perform(click())
+        onView(withId(R.id.dodajJeloBtn)).perform(scrollTo(), click())
         onView(withId(R.id.jeloET)).check(matches(hasErrorText("Jelo vec spremljeno")))
     }
     @Test
     fun maloKarakteraNakonIzmjene() {
         onView(withId(R.id.jeloET)).perform(typeText("Grah"))
-        onView(withId(R.id.dodajJeloBtn)).perform(click())
+        onView(withId(R.id.dodajJeloBtn)).perform(scrollTo(), click())
 
         onView(withId(R.id.jeloET)).perform(replaceText("gulas"))
-        onView(withId(R.id.dodajJeloBtn)).perform(click())
-
-        onData(allOf(`is`("gulas"))).inAdapterView(allOf(withId(R.id.jelaLV), isDisplayed())).perform(click())
-
+        onView(withId(R.id.dodajJeloBtn)).perform(scrollTo(), click())
+        onData(allOf(`is`("gulas"))).inAdapterView(withId(R.id.jelaLV)).perform(click())
         onView(withId(R.id.jeloET)).perform(replaceText("g"))
-        onView(withId(R.id.dodajJeloBtn)).perform(click())
+        onView(withId(R.id.dodajJeloBtn)).perform(scrollTo(), click())
         onView(withId(R.id.jeloET)).check(matches(hasErrorText("Neispravna duzina")))
     }
     @Test
     fun nijedanKlimatskiTip() {
-        onView(withId(R.id.dodajBiljkuBtn)).perform(click())
+        onView(withId(R.id.dodajBiljkuBtn)).perform(scrollTo(), click())
         onView(withId(R.id.ktTV)).check(matches(not(hasErrorText(equalTo("")))))
     }
     @Test
     fun bezProfilaOkusa() {
-        onView(withId(R.id.dodajBiljkuBtn)).perform(click())
+        onView(withId(R.id.dodajBiljkuBtn)).perform(scrollTo(), click())
         onView(withId(R.id.poTV)).check(matches(not(hasErrorText(equalTo("")))))
     }
     @Test
     fun bezDodanihJela() {
-        onView(withId(R.id.dodajBiljkuBtn)).perform(click())
+        onView(withId(R.id.dodajBiljkuBtn)).perform(scrollTo(), click())
         onView(withId(R.id.jTV)).check(matches(not(hasErrorText(equalTo("")))))
     }
 
