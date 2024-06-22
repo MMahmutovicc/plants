@@ -13,8 +13,7 @@ import androidx.room.PrimaryKey
         parentColumns = ["id"],
         childColumns = ["idBiljke"],
         onDelete = ForeignKey.CASCADE
-    )],
-    indices = [Index(value = ["idBiljke"], unique = true)]
+    )]
 )
 data class BiljkaBitmap(
     @PrimaryKey(autoGenerate = true)
