@@ -33,7 +33,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var secondRow: ConstraintLayout
 
     private var plantsList = mutableListOf<Biljka>()
-    //private var allPlants = getPLants()
     private var images = mutableMapOf<Long,Bitmap>()
     private var flowerColor : String = "red"
 
@@ -42,8 +41,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var botanicalListAdapter: BotanicalListAdapter
     private lateinit var cookingListAdapter: CookingListAdapter
 
-    private lateinit var getPlantsFromAdapter : List<MutableList<Biljka>>
-    private lateinit var getImagesFromAdapter : List<MutableList<Biljka>>
     private var currentAdapter = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,7 +57,6 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-        //checkDatabase()
         secondRow = findViewById(R.id.secondRow)
         modSpinner = findViewById(R.id.modSpinner)
         bojaSPIN = findViewById(R.id.bojaSPIN)
@@ -101,35 +97,29 @@ class MainActivity : AppCompatActivity() {
             override fun onNothingSelected(parent: AdapterView<*>?) {}
 
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                if(biljkeRV.adapter == medicalListAdapter) {
+                if(biljkeRV.adapter == medicalListAdapter)
                     plantsList = medicalListAdapter.getPlants()
-                    //images = medicalListAdapter.getImages()
-                }
-                else if(biljkeRV.adapter == botanicalListAdapter) {
+
+                else if(biljkeRV.adapter == botanicalListAdapter)
                     plantsList = botanicalListAdapter.getPlants()
-                    //images = botanicalListAdapter.getImages()
-                }
-                else {
+
+                else
                     plantsList = cookingListAdapter.getPlants()
-                    //images = cookingListAdapter.getImages()
-                }
+
                 if(position == 0) {
                     secondRow.visibility = View.GONE
                     biljkeRV.adapter = medicalListAdapter
                     medicalListAdapter.updatePlants(plantsList)
-                    //medicalListAdapter.setAllPlants(allPlants, allImages)
                 }
                 else if(position == 1) {
                     secondRow.visibility = View.GONE
                     biljkeRV.adapter = cookingListAdapter
                     cookingListAdapter.updatePlants(plantsList)
-                    //cookingListAdapter.setAllPlants(allPlants, allImages)
                 }
                 else if(position == 2) {
                     secondRow.visibility = View.VISIBLE
                     biljkeRV.adapter = botanicalListAdapter
                     botanicalListAdapter.updatePlants(plantsList)
-                    //botanicalListAdapter.setAllPlants(allPlants, allImages)
                 }
             }
         }
@@ -154,8 +144,8 @@ class MainActivity : AppCompatActivity() {
 
         biljkeRV.adapter = medicalListAdapter
         setup()
+        //clearDatabase()
     }
-
     private fun getAllImages() {
         val scope = CoroutineScope(Job() + Dispatchers.Main)
         scope.launch {
@@ -174,6 +164,9 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
+            medicalListAdapter.updateAll(plantsList, images)
+            cookingListAdapter.updateAll(plantsList, images)
+            botanicalListAdapter.updateAll(plantsList, images)
         }
     }
     private fun setup() {
@@ -181,7 +174,15 @@ class MainActivity : AppCompatActivity() {
         scope.launch {
             var db = BiljkaDatabase.getInstance(applicationContext)
             plantsList = db.biljkaDao().getAllBiljkas().toMutableList()
-            medicalListAdapter.updatePlants(plantsList)
+            if (plantsList.isEmpty()) {
+                //If there are no plants add starting plants
+                val startingPlants = getPLants()
+                for (plant in startingPlants) {
+                    db.biljkaDao().saveBiljka(plant)
+                }
+                plantsList = db.biljkaDao().getAllBiljkas().toMutableList()
+            }
+            getAllImages()
         }
     }
     private fun getAllPlants() {
@@ -203,33 +204,23 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun savePlant(newPlant: Biljka) {
+        val toast = Toast.makeText(this, "Dodavanje biljke...", Toast.LENGTH_SHORT) // in Activity
+        toast.show()
         val scope = CoroutineScope(Job() + Dispatchers.Main)
         scope.launch {
             var db = BiljkaDatabase.getInstance(applicationContext)
             var isAdded = db.biljkaDao().saveBiljka(newPlant)
             plantsList = db.biljkaDao().getAllBiljkas().toMutableList()
-            medicalListAdapter.updatePlants(plantsList)
+            currentAdapter = 0
+            getAllImages()
             biljkeRV.adapter = medicalListAdapter
         }
     }
-
-    private fun checkDatabase() {
-        val scope = CoroutineScope(Job() + Dispatchers.Main)
-        scope.launch {
-            var db = BiljkaDatabase.getInstance(applicationContext)
-            //db.biljkaDao().clearData()
-            var biljke = db.biljkaDao().getAllBiljkas()
-            for (biljka in biljke)
-                Log.d("BAZA", biljka.naziv)
-        }
-    }
-
     private fun getPlantsWithFlowerColor() {
         val toast = Toast.makeText(this, "Pretraživanje...", Toast.LENGTH_SHORT) // in Activity
         toast.show()
         val substr = pretragaET.text.toString()
         val trefleDAO = TrefleDAO(applicationContext)
-        Log.d("poziv", "pozvan")
         val scope = CoroutineScope(Job() + Dispatchers.Main)
         scope.launch {
             val results = trefleDAO.getPlantsWithFlowerColor(flowerColor, substr)
@@ -241,33 +232,11 @@ class MainActivity : AppCompatActivity() {
             botanicalListAdapter.updatePlants(results.toMutableList(), 1,plantsImages)
         }
     }
-
-    /*private fun getImage(newPlant: Biljka) {
+    private fun clearDatabase() {
         val scope = CoroutineScope(Job() + Dispatchers.Main)
-
         scope.launch {
-                val result = trefleDAO.getImage(newPlant)
-
-                allImages.add(result)
-                images.add(result)
+            var db = BiljkaDatabase.getInstance(applicationContext)
+            db.biljkaDao().clearData()
         }
     }
-
-    private fun getImages() {
-        Log.d("slike", "pozvana")
-        val scope = CoroutineScope(Job() + Dispatchers.Main)
-        val trefleDAO = TrefleDAO(applicationContext)
-        val startingPlants = allPlants
-        scope.launch {
-            for (plant in startingPlants) {
-                val result = trefleDAO.getImage(plant)
-                allImages.add(result)
-                images.add(result)
-                Log.d("slike", "${allImages.size}")
-            }
-            medicalListAdapter.updatePlants(plantsList, images)
-            cookingListAdapter.updatePlants(plantsList, images)
-            botanicalListAdapter.updatePlants(plantsList, images)
-        }
-    }*/
 }

@@ -18,19 +18,32 @@
           <timeTargetWasSelectedWithDropDown value="2024-06-12T14:57:40.154271700Z" />
         </State>
       </entry>
+      <entry key="DatabaseTest">
+        <State />
+      </entry>
       <entry key="TestS2">
         <State />
       </entry>
       <entry key="app">
+        <State>
+          <runningDeviceTargetSelectedWithDropDown>
+            <Target>
+              <type value="RUNNING_DEVICE_TARGET" />
+              <deviceKey>
+                <Key>
+                  <type value="VIRTUAL_DEVICE_PATH" />
+                  <value value="C:\Users\mirza\.android\avd\Copy_of_Pixel_5_API_30.avd" />
+                </Key>
+              </deviceKey>
+            </Target>
+          </runningDeviceTargetSelectedWithDropDown>
+          <timeTargetWasSelectedWithDropDown value="2024-06-22T12:41:39.355024700Z" />
+        </State>
+      </entry>
+      <entry key="clearData()">
         <State />
       </entry>
-      <entry key="dvaIstaJelaNakonIzmjene()">
-        <State />
-      </entry>
-      <entry key="maloKarakteraNakonIzmjene()">
-        <State />
-      </entry>
-      <entry key="premaloKaraktera()">
+      <entry key="writeUserAndReadInList()">
         <State />
       </entry>
     </value>

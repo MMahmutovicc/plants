@@ -1,13 +1,12 @@
 package com.example.spirala
 
-import android.R.attr
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Base64
 import android.util.Base64.DEFAULT
 import androidx.room.TypeConverter
+import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
-import java.util.Arrays
 
 
 class Converters {
@@ -72,23 +71,23 @@ class Converters {
     }
 
     @TypeConverter
-    fun bitmapToBase64(bitmap: Bitmap) : String{
-        // create a ByteBuffer and allocate size equal to bytes in   the bitmap
-        val byteBuffer = ByteBuffer.allocate(bitmap.height * bitmap.rowBytes)
-        //copy all the pixels from bitmap to byteBuffer
-        bitmap.copyPixelsToBuffer(byteBuffer)
-        //convert byte buffer into byteArray
-        val byteArray = byteBuffer.array()
-        //convert byteArray to Base64 String with default flags
-        return Base64.encodeToString(byteArray, DEFAULT)
-    }
+    fun bitmapToBase64(bitmap: Bitmap) : String {
+        val width = if (bitmap.width > 500) 500 else bitmap.width
+        val height = if (bitmap.height > 660) 660 else bitmap.height
+        val resizedBmp: Bitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height)
 
+        val outputStream = ByteArrayOutputStream()
+        resizedBmp.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+        val byteArray = outputStream.toByteArray()
+        return Base64.encodeToString(byteArray, Base64.DEFAULT)
+    }
     @TypeConverter
-    fun base64ToBitmap(base64String: String):Bitmap{
-        //convert Base64 String into byteArray
-        val byteArray = Base64.decode(base64String, DEFAULT)
-        //byteArray to Bitmap
-        return BitmapFactory.decodeByteArray(byteArray,
-            0, byteArray.size)
+    fun base64ToBitmap(string: String):Bitmap?{
+        return try {
+            val encodeByte = Base64.decode(string, Base64.DEFAULT)
+            BitmapFactory.decodeByteArray(encodeByte, 0, encodeByte.size)
+        } catch (e: Exception) {
+            null
+        }
     }
 }

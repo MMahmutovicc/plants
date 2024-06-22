@@ -27,8 +27,8 @@ abstract class BiljkaDatabase: RoomDatabase() {
                 return@withContext insertPlant(biljka) != -1L
             }
         }
-        /*@Update
-        suspend fun fixOfflineBiljka(vararg biljka: Biljka) : Int*/
+        @Update
+        suspend fun fixOfflineBiljka(vararg biljka: Biljka) : Int
         @Insert
         suspend fun insertImage(biljkaBitmap: BiljkaBitmap) : Long
         suspend fun addImage(idBiljke : Long, bitmap: Bitmap) : Boolean {
