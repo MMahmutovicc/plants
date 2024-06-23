@@ -195,6 +195,7 @@ class NovaBiljkaActivity : AppCompatActivity() {
                 val trefleDAO = TrefleDAO(applicationContext)
                 scope.launch {
                     val result = trefleDAO.fixData(biljka)
+                    result.onlineChecked = true
                     val resultIntent = Intent()
                     resultIntent.putExtra("newPlant",result)
                     setResult(RESULT_OK,resultIntent)

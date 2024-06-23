@@ -2,6 +2,7 @@ package com.example.spirala
 
 import android.content.Context
 import android.graphics.Bitmap
+import androidx.lifecycle.findViewTreeViewModelStoreOwner
 import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Insert
@@ -28,7 +29,20 @@ abstract class BiljkaDatabase: RoomDatabase() {
             }
         }
         @Update
-        suspend fun fixOfflineBiljka(vararg biljka: Biljka) : Int
+        suspend fun updateBiljka(vararg biljka: Biljka)
+        suspend fun fixOfflineBiljka() : Int {
+            val biljke = getAllUncheckedBiljkas().toMutableList()
+            val trefleDAO = TrefleDAO()
+            for (biljka in biljke) {
+                val fixedBiljka = trefleDAO.fixData(biljka)
+                fixedBiljka.onlineChecked = true
+                updateBiljka(fixedBiljka)
+            }
+            return biljke.size
+        }
+
+        @Query("SELECT * FROM Biljka WHERE onlineChecked=false")
+        suspend fun getAllUncheckedBiljkas() : List<Biljka>
         @Insert
         suspend fun insertImage(biljkaBitmap: BiljkaBitmap) : Long
         suspend fun addImage(idBiljke : Long, bitmap: Bitmap) : Boolean {
@@ -42,7 +56,13 @@ abstract class BiljkaDatabase: RoomDatabase() {
         @Query("SELECT * FROM Biljka")
         suspend fun getAllBiljkas() : List<Biljka>
         @Query("DELETE FROM Biljka")
-        suspend fun clearData()
+        suspend fun clearBiljka()
+        @Query("DELETE FROM BiljkaBitmap")
+        suspend fun clearBitmap()
+        suspend fun clearData() {
+            clearBiljka()
+            clearBitmap()
+        }
     }
 
     companion object {
